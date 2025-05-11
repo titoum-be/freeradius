@@ -1,3 +1,7 @@
+export db_name=radius_db
+export usr_name=radius
+export usr_pwd=radpass
+
 apt update
 apt upgrade -y
 cd /opt
@@ -7,7 +11,7 @@ cd radius_script
 
 echo "/*
 *
-* PostgreSQL schema for FreeRADIUS
+* PostgreSQL schema for $db_name
 *
 */
 
@@ -166,14 +170,38 @@ CREATE TABLE IF NOT EXISTS nasreload (
        ReloadTime		timestamp with time zone NOT NULL
 );" > schema.sql
 
-echo "ALTER USER postgres WITH ENCRYPTED PASSWORD 'radpass'" > alterUser.sql
+echo "
+psql -c \"CREATE DATABASE $db_name\"
+psql -c \"CREATE USER $usr_name WITH ENCRYPTED PASSWORD '$usr_pwd'\"
+psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name TO $usr_name\"
+psql -c \"GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name\";
+" > createUser.sh
 
+echo "
+psql postgresql://$usr_name:$usr_pwd@localhost:5433/$db_name -f /opt/radius_script/schema.sql
+" > setupSchema.sh
+
+chmod +x *.sh
+
+#create cluster ver17
 pg_createcluster 17 main
+
+# start db
 /etc/init.d/postgresql start
 
-su -c "psql  -f /opt/radius_script/alterUser.sql" postgres
-su -c "createdb freeradius" postgres
-
+# std modification
 su -c "sed -i '/^local/s/peer/scram-sha-256/' /etc/postgresql/17/main/pg_hba.conf" postgres
+# fix issue https://dba.stackexchange.com/questions/83984/connect-to-postgresql-server-fatal-no-pg-hba-conf-entry-for-host 
+su -c "echo 'host    all             all             0.0.0.0/0               scram-sha-256' >> /etc/postgresql/17/main/pg_hba.conf" postgres 
 
-su -c "psql -d freeradius -f /opt/radius_script/schema.sql" postgres
+# Create user
+su -c "sh /opt/radius_script/createUser.sh" postgres
+
+# allow our user to create table in public
+su -c "psql -d radius_db -c 'GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name'" postgres
+
+# create radius schema
+su -c "sh /opt/radius_script/setupSchema.sh" postgres
+
+# restart db
+/etc/init.d/postgresql restart

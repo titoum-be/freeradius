@@ -68,7 +68,7 @@ RUN apk update \
 #  other dependencies then install any others required in your
 #  local Dockerfile.
 #
-    && apk add libcurl json-c libldap hiredis bash sqlite-dev \
+    && apk add libcurl json-c libldap hiredis bash nano postgresql-dev\
 #RUN apk add libidn krb5
 #RUN apk add unbound-libs
 #RUN apk add ruby-libs perl python2-dev
@@ -77,8 +77,10 @@ RUN apk update \
     \
     && ln -s /opt/etc/raddb /etc/raddb
 
+COPY ./raddb/ /opt/etc/raddb
 COPY docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
+RUN ln -s /etc/raddb/mods-available/sql /etc/raddb/mods-enabled/
 
 EXPOSE 1812/udp 1813/udp
 ENTRYPOINT ["/docker-entrypoint.sh"]

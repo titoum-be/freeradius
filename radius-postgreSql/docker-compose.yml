@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    shm_size: 128mb
+    container_name: radius-db
+    ports:
+      - 5432:5433
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 5050:8080

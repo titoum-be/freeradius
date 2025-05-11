@@ -166,7 +166,7 @@ sql {
 	#
 	server = "10.10.0.200"
 	port = 5432
-	login = "postgres"
+	login = "radius"
 	password = "radpass"
 
 	# Connection info for Mongo

@@ -23,4 +23,6 @@ run: docker build -t freeradius_3.2.8 -f Dockerfile .
 then if all is fine.
 run: docker run  --rm --name radius_server -t -p 1812-1813:1812-1813/udp freeradius_3.2.8 -X
 
-hint: dont forget to populate your db before starting as it wont take new entries once started.
+hint: 
+ Dont forget to populate your db before starting as it wont take new entries once started.
+ you can easily edit your db entries through the adminer: http://[radius-db]:5050/

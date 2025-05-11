@@ -1,3 +1,7 @@
+export db_name=radius_db
+export usr_name=radius
+export usr_pwd=radpass
+
 apt update
 apt upgrade -y
 cd /opt
@@ -7,7 +11,7 @@ cd radius_script
 
 echo "/*
 *
-* PostgreSQL schema for FreeRADIUS
+* PostgreSQL schema for $db_name
 *
 */
 
@@ -166,14 +170,18 @@ CREATE TABLE IF NOT EXISTS nasreload (
        ReloadTime		timestamp with time zone NOT NULL
 );" > schema.sql
 
-echo "ALTER USER postgres WITH ENCRYPTED PASSWORD 'radpass'" > alterUser.sql
+echo "
+psql -c \"CREATE DATABASE $db_name\"
+psql -c \"CREATE USER $usr_name WITH ENCRYPTED PASSWORD '$usr_pwd'\"
+psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name TO $usr_name\"
+" > createUser.sh
+chmod +x *.sh
 
 pg_createcluster 17 main
 /etc/init.d/postgresql start
 
-su -c "psql  -f /opt/radius_script/alterUser.sql" postgres
-su -c "createdb freeradius" postgres
+su -c "sh  -f /opt/radius_script/createUser.sh" postgres
 
 su -c "sed -i '/^local/s/peer/scram-sha-256/' /etc/postgresql/17/main/pg_hba.conf" postgres
 
-su -c "psql -d freeradius -f /opt/radius_script/schema.sql" postgres
+su -c "psql postgresql://$usr_name:$usr_pwd@localhost:5432/$db_name -f /opt/radius_script/schema.sql" postgres

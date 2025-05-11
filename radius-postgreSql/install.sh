@@ -174,6 +174,7 @@ echo "
 psql -c \"CREATE DATABASE $db_name\"
 psql -c \"CREATE USER $usr_name WITH ENCRYPTED PASSWORD '$usr_pwd'\"
 psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name TO $usr_name\"
+psql -c \"GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name\";
 " > createUser.sh
 
 echo "
@@ -185,8 +186,14 @@ chmod +x *.sh
 pg_createcluster 17 main
 /etc/init.d/postgresql start
 
-su -c "sh  -f /opt/radius_script/createUser.sh" postgres
+/*Create user*/
+su -c "sh /opt/radius_script/createUser.sh" postgres
 
+/*std modification*/
 su -c "sed -i '/^local/s/peer/scram-sha-256/' /etc/postgresql/17/main/pg_hba.conf" postgres
 
-su -c "sh  -f /opt/radius_script/setupSchema.sh" postgres
+/*allow our user to create table in public*/
+su -c "psql -d radius_db -c 'GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name'" postgres
+
+/*create radius schema*/
+su -c "sh /opt/radius_script/setupSchema.sh" postgres

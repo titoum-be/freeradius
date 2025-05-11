@@ -185,19 +185,19 @@ chmod +x *.sh
 
 pg_createcluster 17 main
 
-/*std modification*/
+# std modification
 su -c "sed -i '/^local/s/peer/scram-sha-256/' /etc/postgresql/17/main/pg_hba.conf" postgres
-/* fix issue https://dba.stackexchange.com/questions/83984/connect-to-postgresql-server-fatal-no-pg-hba-conf-entry-for-host */
+# fix issue https://dba.stackexchange.com/questions/83984/connect-to-postgresql-server-fatal-no-pg-hba-conf-entry-for-host 
 su -c "echo 'host    all             all             0.0.0.0/0               scram-sha-256' >> /etc/postgresql/17/main/pg_hba.conf" postgres 
 
-/* stat db */
+# start db
 /etc/init.d/postgresql start
 
-/*Create user*/
+# Create user
 su -c "sh /opt/radius_script/createUser.sh" postgres
 
-/*allow our user to create table in public*/
+# allow our user to create table in public
 su -c "psql -d radius_db -c 'GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name'" postgres
 
-/*create radius schema*/
+# create radius schema
 su -c "sh /opt/radius_script/setupSchema.sh" postgres

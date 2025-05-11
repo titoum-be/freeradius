@@ -15,3 +15,12 @@ you can edit your preferences:
 sh install.sh
 
 congratulations! db is ready for radius :-)
+
+For Radius:
+
+copy the folder at your prefered place.
+run: docker build -t freeradius_3.2.8 -f Dockerfile .
+then if all is fine.
+run: docker run  --rm --name radius_server -t -p 1812-1813:1812-1813/udp freeradius_3.2.8 -X
+
+hint: dont forget to populate your db before starting as it wont take new entries once started.

@@ -177,7 +177,7 @@ psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name TO $usr_name\"
 " > createUser.sh
 
 echo "
-psql postgresql://$usr_name:$usr_pwd@localhost:5432/$db_name -f /opt/radius_script/schema.sql
+psql postgresql://$usr_name:$usr_pwd@localhost:5433/$db_name -f /opt/radius_script/schema.sql
 " > setupSchema.sh
 
 chmod +x *.sh

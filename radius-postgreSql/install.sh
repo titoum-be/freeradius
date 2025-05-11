@@ -183,15 +183,16 @@ psql postgresql://$usr_name:$usr_pwd@localhost:5433/$db_name -f /opt/radius_scri
 
 chmod +x *.sh
 
+#create cluster ver17
 pg_createcluster 17 main
+
+# start db
+/etc/init.d/postgresql start
 
 # std modification
 su -c "sed -i '/^local/s/peer/scram-sha-256/' /etc/postgresql/17/main/pg_hba.conf" postgres
 # fix issue https://dba.stackexchange.com/questions/83984/connect-to-postgresql-server-fatal-no-pg-hba-conf-entry-for-host 
 su -c "echo 'host    all             all             0.0.0.0/0               scram-sha-256' >> /etc/postgresql/17/main/pg_hba.conf" postgres 
-
-# start db
-/etc/init.d/postgresql start
 
 # Create user
 su -c "sh /opt/radius_script/createUser.sh" postgres
@@ -201,3 +202,6 @@ su -c "psql -d radius_db -c 'GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name'
 
 # create radius schema
 su -c "sh /opt/radius_script/setupSchema.sh" postgres
+
+# restart db
+/etc/init.d/postgresql restart

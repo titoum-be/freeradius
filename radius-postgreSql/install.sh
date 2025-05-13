@@ -171,37 +171,18 @@ CREATE TABLE IF NOT EXISTS nasreload (
 );" > schema.sql
 
 echo "
-psql -c \"CREATE DATABASE $db_name\"
-psql -c \"CREATE USER $usr_name WITH ENCRYPTED PASSWORD '$usr_pwd'\"
-psql -c \"GRANT ALL PRIVILEGES ON DATABASE $db_name TO $usr_name\"
-psql -c \"GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name\";
-" > createUser.sh
-
-echo "
-psql postgresql://$usr_name:$usr_pwd@localhost:5433/$db_name -f /opt/radius_script/schema.sql
+psql postgresql://$usr_name:$usr_pwd@localhost:5432/$db_name -f /opt/radius_script/schema.sql
 " > setupSchema.sh
 
 chmod +x *.sh
 
-#create cluster ver17
-pg_createcluster 17 main
-
-# start db
-/etc/init.d/postgresql start
-
 # std modification
-su -c "sed -i '/^local/s/peer/scram-sha-256/' /etc/postgresql/17/main/pg_hba.conf" postgres
+su -c "sed -i '/^local/s/peer/scram-sha-256/' /var/lib/postgresql/data/pg_hba.conf" postgres
 # fix issue https://dba.stackexchange.com/questions/83984/connect-to-postgresql-server-fatal-no-pg-hba-conf-entry-for-host 
-su -c "echo 'host    all             all             0.0.0.0/0               scram-sha-256' >> /etc/postgresql/17/main/pg_hba.conf" postgres 
-
-# Create user
-su -c "sh /opt/radius_script/createUser.sh" postgres
-
-# allow our user to create table in public
-su -c "psql -d radius_db -c 'GRANT ALL PRIVILEGES ON SCHEMA public TO $usr_name'" postgres
+su -c "echo 'host    all             all             0.0.0.0/0               scram-sha-256' >> /var/lib/postgresql/data/pg_hba.conf" postgres 
 
 # create radius schema
 su -c "sh /opt/radius_script/setupSchema.sh" postgres
 
 # restart db
-/etc/init.d/postgresql restart
+su -c "/usr/lib/postgresql/17/bin/pg_ctl  -D /var/lib/postgresql/data -l logfile restart" postgres

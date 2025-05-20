@@ -5,10 +5,22 @@ services:
     shm_size: 128mb
     container_name: radius-db
     ports:
-      - 5432:5433
+      - 5432:5432
+    volumes:
+      - postgresSQL:/var/lib/postgresql/data
+    environment:
+      - TZ=Europe/Amsterdam
+      - POSTGRES_PASSWORD=radpass
+      - POSTGRES_USER=radius
+      - POSTGRES_DB=radius_db
 
   adminer:
     image: adminer
     restart: always
     ports:
       - 5050:8080
+      
+volumes:
+  postgresSQL:
+    external: true
+
